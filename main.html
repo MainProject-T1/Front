@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=League+Spartan&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=DM+Sans&display=swap" rel="stylesheet" />
+    <link href="css/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>피부진단 채팅 인터페이스</title>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 헤더 섹션 -->
+        <div class="header">
+            <div class="profile-section">
+                <div class="profile-image">
+                    <img src="images/v220_981.png" alt="프로필 이미지">
+                </div>
+                <div class="profile-info">
+                    <div class="greeting">안녕하세요!</div>
+                    <div class="username">강종우 님!</div>
+                </div>
+            </div>
+            <div class="settings-icon" onclick="alert('톱니바퀴 클릭됨!'); console.log('톱니바퀴 클릭됨!'); toggleCustomerSelector();" style="cursor: pointer;">
+                <i class="fas fa-cog"></i>
+            </div>
+        </div>
+        
+        <!-- 채팅 헤더 -->
+        <div class="chat-header">
+            <div class="back-button">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="bot-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="bot-info">
+                <div class="bot-name">SBot</div>
+                <div class="status">
+                    <div class="status-dot"></div>
+                    <span>Always active</span>
+                </div>
+            </div>
+            <div class="menu-button">
+                <i class="fas fa-ellipsis-h"></i>
+            </div>
+        </div>
+        
+        <!-- 채팅 메시지 영역 -->
+        <div class="chat-messages">
+            <div class="time-stamp">Wed 8:21 AM</div>
+            
+            <!-- 봇 메시지 -->
+            <div class="message bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">안녕하세요 저는 당신의 피부진단을 도와드리는 SBOT! 입니다.<br>무엇을 도와드릴까요?</div>
+                </div>
+            </div>
+            
+            <!-- 사용자 메시지 -->
+            <div class="message user-message">
+                <div class="message-content">
+                    <div class="message-text">화농육아종에 대해서알려줘</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 입력 영역 -->
+        <div class="chat-input">
+            <div class="input-field">
+                <input type="text" id="user-input" placeholder="Type a message...">
+                <div class="mic-button">
+                    <i class="fas fa-microphone"></i>
+                </div>
+            </div>
+            <div class="send-button" id="send-button">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 디버깅을 위한 즉시 실행 함수
+        (function() {
+            console.log('페이지 로드 시작');
+            // 페이지가 로드되면 즉시 실행
+            window.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM 로드 완료');
+                // 톱니바퀴 아이콘 직접 찾기
+                const settingsIcon = document.querySelector('.settings-icon');
+                console.log('톱니바퀴 아이콘:', settingsIcon);
+                
+                if (settingsIcon) {
+                    // 클릭 이벤트 직접 연결
+                    settingsIcon.addEventListener('click', function() {
+                        console.log('톱니바퀴 클릭됨!');
+                        window.toggleCustomerSelector();
+                    });
+                }
+            });
+        })();
+        
+        // 채팅 메시지 영역과 입력 필드 요소 가져오기
+        const chatMessages = document.querySelector('.chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        
+        // 백엔드 API URL 설정
+        const API_URL = 'http://localhost:8000';
+        
+        // 로딩 표시를 위한 변수
+        let isWaitingForResponse = false;
+        
+        // 세션 ID를 저장할 변수
+        let sessionId = getCookie('session_id') || '';
+        
+        // 쿠키 가져오기 함수
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+        
+        // 고객 ID 선택 메뉴 컨테이너 생성 (전역 변수로 선언)
+        let customerSelectorContainer;
+        
+        // 대화 기록 가져오기
+        async function fetchChatHistory() {
+            try {
+                // 고객 ID가 선택되지 않은 경우 기본값 설정
+                if (!currentCustomerId) {
+                    currentCustomerId = customerIds[0]; // customer002를 기본값으로 설정
+                    console.log('기본 고객 ID 설정:', currentCustomerId);
+                    // 쿠키에 고객 ID 저장 (1일 유효)
+                    document.cookie = `customer_id=${currentCustomerId}; path=/; max-age=86400`;
+                }
+                
+                console.log('대화 기록 요청 중... 고객 ID:', currentCustomerId);
+                
+                // 고객 ID를 쿼리 파라미터로 전달
+                const response = await fetch(`${API_URL}/history?customer_id=${currentCustomerId}`, {
+                    method: 'GET',
+                    credentials: 'omit' // 쿠키 전송 옵션 변경
+                });
+                
+                if (!response.ok) {
+                    throw new Error('대화 기록을 가져오는데 실패했습니다.');
+                }
+                
+                const data = await response.json();
+                console.log('가져온 대화 기록:', data);
+                
+                // 가져온 대화 기록 표시
+                if (data.messages && data.messages.length > 0) {
+                    // 기존 메시지를 모두 지우고 새로 표시
+                    chatMessages.innerHTML = '<div class="time-stamp">' + getCurrentTime() + '</div>';
+                    
+                    data.messages.forEach(msg => {
+                        if (msg.role === 'user') {
+                            addUserMessage(msg.content, false);
+                        } else if (msg.role === 'bot' || msg.role === 'assistant') {
+                            addBotMessage(msg.content, false);
+                        }
+                    });
+                    
+                    // 마지막 메시지로 스크롤
+                    scrollToBottom();
+                } else {
+                    // 대화 기록이 없는 경우 초기 메시지 표시
+                    chatMessages.innerHTML = '<div class="time-stamp">' + getCurrentTime() + '</div>';
+                    // 모든 고객 ID에 대해 동일한 피부스킨 AI 메시지 사용
+                    addBotMessage('안녕하세요! 저는 피부진단을 도와드리는 피부스킨 AI입니다. 피부 관련 질문이나 고민이 있으시면 언제든지 말씀해주세요. 어떤 피부 고민이 있으신가요?');
+                }
+            } catch (error) {
+                console.error('대화 기록 가져오기 오류:', error);
+                // 오류 발생 시 기본 메시지 표시
+                chatMessages.innerHTML = '<div class="time-stamp">' + getCurrentTime() + '</div>';
+                addBotMessage('대화 기록을 불러오는 중 오류가 발생했습니다. 새로운 대화를 시작해보세요.');
+            }
+        }
+        
+        // 페이지 로드 시 실행
+        window.onload = async () => {
+            // 페이지가 완전히 로드된 후 약간의 지연을 주어 DOM이 모두 로드되었는지 확인
+            setTimeout(async () => {
+                console.log('페이지 로드 완료');
+                
+                // 백엔드에서 대화 기록 가져오기
+                await fetchChatHistory();
+                
+                // 입력 필드에 포커스
+                userInput.focus();
+                
+                // 톱니바퀴 아이콘에 직접 클릭 이벤트 추가
+                const settingsIcon = document.querySelector('.settings-icon');
+                if (settingsIcon) {
+                    console.log('톱니바퀴 아이콘 발견:', settingsIcon);
+                    settingsIcon.style.cursor = 'pointer'; // 커서 변경하여 클릭 가능함을 표시
+                    
+                    // 클릭 이벤트 추가
+                    settingsIcon.onclick = function(e) {
+                        e.stopPropagation(); // 이벤트 버블링 방지
+                        console.log('톱니바퀴 클릭됨!');
+                        
+                        // 세션 관리 메뉴 표시
+                        showSessionMenu();
+                    };
+                } else {
+                    console.error('톱니바퀴 아이콘을 찾을 수 없습니다!');
+                }
+            }, 100);
+        };
+        
+        // 고객 ID 선택기 토글 함수 - 전역 함수로 정의
+        window.toggleCustomerSelector = function() {
+            console.log('토글 함수 호출됨!');
+            if (customerSelectorContainer) {
+                if (customerSelectorContainer.style.display === 'none') {
+                    customerSelectorContainer.style.display = 'block';
+                } else {
+                    customerSelectorContainer.style.display = 'none';
+                }
+            } else {
+                alert('고객 ID 선택기가 아직 준비되지 않았습니다. 페이지를 새로고침해주세요.');
+                console.error('고객 ID 선택기가 아직 생성되지 않았습니다.');
+            }
+        };
+        
+        // 고객 ID 선택 UI 생성
+        function createCustomerSelector() {
+            console.log('고객 ID 선택기 함수 실행');
+            
+            // 고객 ID 선택 메뉴 컨테이너 생성 (전역 변수에 할당)
+            customerSelectorContainer = document.createElement('div');
+            customerSelectorContainer.id = 'customer-selector-container';
+            customerSelectorContainer.style.position = 'absolute';
+            customerSelectorContainer.style.top = '60px';
+            customerSelectorContainer.style.right = '20px';
+            customerSelectorContainer.style.zIndex = '1000'; // 더 높은 z-index
+            customerSelectorContainer.style.backgroundColor = '#ffffff';
+            customerSelectorContainer.style.padding = '15px';
+            customerSelectorContainer.style.borderRadius = '10px';
+            customerSelectorContainer.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+            customerSelectorContainer.style.display = 'none'; // 초기에는 숨김
+            customerSelectorContainer.style.minWidth = '200px';
+            
+            // 메뉴 제목
+            const title = document.createElement('div');
+            title.textContent = '고객 ID 선택';
+            title.style.fontWeight = 'bold';
+            title.style.fontSize = '16px';
+            title.style.marginBottom = '10px';
+            title.style.color = '#303437';
+            
+            // 셀렉트 박스
+            const selector = document.createElement('select');
+            selector.id = 'customer-selector';
+            selector.style.padding = '8px 10px';
+            selector.style.width = '100%';
+            selector.style.borderRadius = '5px';
+            selector.style.border = '1px solid #C9D5FF';
+            selector.style.marginBottom = '10px';
+            selector.style.borderRadius = '5px';
+            selector.style.border = '1px solid #ddd';
+            
+            // 고객 ID 옵션 추가
+            customerIds.forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = id;
+                if (id === currentCustomerId) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+            
+            // 확인 버튼
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = '확인';
+            confirmButton.style.padding = '8px 15px';
+            confirmButton.style.backgroundColor = '#225FFF';
+            confirmButton.style.color = 'white';
+            confirmButton.style.border = 'none';
+            confirmButton.style.borderRadius = '5px';
+            confirmButton.style.cursor = 'pointer';
+            confirmButton.style.width = '100%';
+            
+            // 확인 버튼 클릭 이벤트
+            confirmButton.addEventListener('click', function() {
+                const selectedCustomerId = selector.value;
+                if (selectedCustomerId !== currentCustomerId) {
+                    currentCustomerId = selectedCustomerId;
+                    loadChatHistory(currentCustomerId);
+                }
+                customerSelectorContainer.style.display = 'none';
+            });
+            
+            customerSelectorContainer.appendChild(title);
+            customerSelectorContainer.appendChild(selector);
+            customerSelectorContainer.appendChild(confirmButton);
+            
+            // 채팅 컨테이너에 메뉴 추가
+            document.querySelector('.chat-container').appendChild(customerSelectorContainer);
+            
+            // 문서 아무 곳이나 클릭하면 메뉴 닫기
+            document.addEventListener('click', function(event) {
+                const settingsIcon = document.querySelector('.settings-icon');
+                if (customerSelectorContainer && 
+                    !customerSelectorContainer.contains(event.target) && 
+                    settingsIcon && !settingsIcon.contains(event.target)) {
+                    customerSelectorContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // 대화 기록 저장
+        function saveChatHistory(customerId) {
+            // 현재 UI에 표시된 대화를 저장하지 않고, 이미 메모리에 있는 내용을 유지
+        }
+        
+        // 대화 기록 불러오기
+        function loadChatHistory(customerId) {
+            console.log('고객 ID 변경으로 대화 기록 불러오기:', customerId);
+            
+            // 현재 고객 ID 업데이트
+            currentCustomerId = customerId;
+            
+            // 쿠키에 고객 ID 저장
+            document.cookie = `customer_id=${currentCustomerId}; path=/; max-age=86400`;
+            
+            // 서버에서 대화 기록 가져오기
+            fetchChatHistory();
+        }
+        
+        // 현재 시간 가져오기
+        function getCurrentTime() {
+            const now = new Date();
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const day = days[now.getDay()];
+            let hours = now.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            let minutes = now.getMinutes();
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            return `${day} ${hours}:${minutes} ${ampm}`;
+        }
+        
+        // 메시지 전송 처리
+        async function handleSendMessage() {
+            const message = userInput.value.trim();
+            
+            if (message && !isWaitingForResponse) {
+                // 사용자 메시지 UI에 추가
+                addUserMessage(message);
+                
+                // 입력창 초기화
+                userInput.value = '';
+                
+                // 봇 응답 가져오기
+                await fetchBotResponse(message);
+            }
+        }
+        
+        // 사용자 메시지 UI에 추가
+        function addUserMessage(message, scroll = true) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'user-message');
+            messageElement.innerHTML = `
+                <div class="message-content">
+                    <div class="message-text">${message}</div>
+                    <div class="message-time">${getCurrentTime()}</div>
+                </div>
+            `;
+            chatMessages.appendChild(messageElement);
+            
+            // 스크롤 자동 이동 (기본값: true)
+            if (scroll) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        
+        // 봇 메시지 UI에 추가
+        function addBotMessage(message, scroll = true) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'bot-message');
+            messageElement.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">${message}</div>
+                    <div class="message-time">${getCurrentTime()}</div>
+                </div>
+            `;
+            chatMessages.appendChild(messageElement);
+            
+            // 스크롤 자동 이동 (기본값: true)
+            if (scroll) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        
+        // 로딩 메시지 추가
+        function addLoadingMessage() {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'bot-message');
+            messageElement.id = 'loading-message';
+            messageElement.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">답변을 생성 중입니다...</div>
+                </div>
+            `;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 로딩 메시지 제거
+        function removeLoadingMessage() {
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+        }
+        
+        // 봇 응답 가져오기 (FastAPI 백엔드 호출)
+        async function fetchBotResponse(message) {
+            isWaitingForResponse = true;
+            addLoadingMessage();
+            
+            try {
+                // 고객 ID가 선택되지 않은 경우 기본값 설정
+                if (!currentCustomerId) {
+                    currentCustomerId = customerIds[0]; // customer001을 기본값으로 설정
+                    console.log('고객 ID 기본값 설정:', currentCustomerId);
+                    // 쿠키에 고객 ID 저장 (1일 유효)
+                    document.cookie = `customer_id=${currentCustomerId}; path=/; max-age=86400`;
+                }
+                
+                console.log('메시지 전송 중... 고객 ID:', currentCustomerId);
+                
+                // FastAPI 백엔드 호출
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        customer_id: currentCustomerId
+                    }),
+                    credentials: 'omit' // 쿠키 전송 옵션 변경
+                });
+                
+                removeLoadingMessage();
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || '서버 오류가 발생했습니다.');
+                }
+                
+                // 봇 응답 추출
+                const botResponse = data.response;
+                
+                // 봇 응답을 UI에 추가
+                addBotMessage(botResponse);
+                
+                return botResponse;
+            } catch (error) {
+                console.error('API 호출 오류:', error);
+                removeLoadingMessage();
+                const errorMessage = '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.';
+                addBotMessage(errorMessage);
+                return errorMessage;
+            } finally {
+                isWaitingForResponse = false;
+            }
+            
+            isWaitingForResponse = false;
+        }
+        
+        // 고객 ID 목록
+        const customerIds = ['customer002', 'customer003', 'customer004', 'customer005'];
+        
+        // 현재 선택된 고객 ID
+        let currentCustomerId = '';
+        
+        // 고객 ID 선택기 표시
+        function showSessionMenu() {
+            // 이미 생성된 경우 삭제
+            const existingMenu = document.getElementById('customer-selector-container');
+            if (existingMenu) {
+                existingMenu.remove();
+            }
+            
+            const menuContainer = document.createElement('div');
+            menuContainer.id = 'customer-selector-container';
+            menuContainer.classList.add('customer-selector-container');
+            menuContainer.style.padding = '15px';
+            menuContainer.style.borderRadius = '10px';
+            menuContainer.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+            menuContainer.style.minWidth = '200px';
+            
+            const title = document.createElement('h3');
+            title.textContent = '고객 ID 선택';
+            title.style.marginTop = '0';
+            title.style.marginBottom = '10px';
+            
+            const select = document.createElement('select');
+            select.id = 'customer-id-select';
+            select.style.width = '100%';
+            select.style.padding = '8px';
+            select.style.marginBottom = '10px';
+            select.style.borderRadius = '5px';
+            select.style.border = '1px solid #ddd';
+            
+            // 고객 ID 옵션 추가
+            customerIds.forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = id;
+                if (id === currentCustomerId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = '확인';
+            confirmButton.style.width = '100%';
+            confirmButton.style.padding = '8px';
+            confirmButton.style.backgroundColor = '#4CAF50';
+            confirmButton.style.color = 'white';
+            confirmButton.style.border = 'none';
+            confirmButton.style.borderRadius = '5px';
+            confirmButton.style.cursor = 'pointer';
+            confirmButton.style.marginBottom = '10px';
+            
+            confirmButton.onclick = async function() {
+                const selectedId = document.getElementById('customer-id-select').value;
+                if (selectedId !== currentCustomerId) {
+                    // 현재 고객 ID 변경
+                    currentCustomerId = selectedId;
+                    
+                    // 쿠키에 고객 ID 저장
+                    document.cookie = `customer_id=${currentCustomerId}; path=/; max-age=86400`;
+                    
+                    console.log('고객 ID 변경됨:', currentCustomerId);
+                    
+                    // 채팅 메시지 영역 초기화 (임시로 로딩 메시지 표시)
+                    chatMessages.innerHTML = '<div class="time-stamp">' + getCurrentTime() + '</div>';
+                    addBotMessage(`고객 ID가 ${currentCustomerId}로 변경되었습니다. 대화 기록을 불러오는 중...`);
+                    
+                    // 해당 고객 ID의 대화 기록 불러오기
+                    fetchChatHistory();
+                }
+                menuContainer.style.display = 'none';
+            };
+            
+            const resetButton = document.createElement('button');
+            resetButton.textContent = '대화 기록 초기화';
+            resetButton.style.width = '100%';
+            resetButton.style.padding = '8px';
+            resetButton.style.backgroundColor = '#f44336';
+            resetButton.style.color = 'white';
+            resetButton.style.border = 'none';
+            resetButton.style.borderRadius = '5px';
+            resetButton.style.cursor = 'pointer';
+            resetButton.style.marginBottom = '10px';
+            
+            resetButton.onclick = async function() {
+                await resetChatHistory();
+                menuContainer.style.display = 'none';
+            };
+            
+            menuContainer.appendChild(title);
+            menuContainer.appendChild(select);
+            menuContainer.appendChild(confirmButton);
+            menuContainer.appendChild(resetButton);
+            
+            document.body.appendChild(menuContainer);
+            
+            // 바깥쪽 클릭 시 메뉴 닫기
+            document.addEventListener('click', function(e) {
+                if (menuContainer && e.target !== menuContainer && !menuContainer.contains(e.target) && 
+                    !document.querySelector('.settings-icon').contains(e.target)) {
+                    menuContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // 대화 기록 초기화 함수
+        async function resetChatHistory() {
+            try {
+                // 사용할 ID 결정 (고객 ID 우선)
+                const targetId = currentCustomerId || sessionId;
+                
+                const response = await fetch(`${API_URL}/history/${targetId}`, {
+                    method: 'DELETE',
+                    credentials: 'omit'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('대화 기록 초기화 중 오류가 발생했습니다.');
+                }
+                
+                // 채팅 메시지 영역 초기화
+                chatMessages.innerHTML = '<div class="time-stamp">Wed 8:21 AM</div>';
+                
+                // 고객 ID에 따라 다른 초기화 메시지 표시
+                if (currentCustomerId === 'customer001') {
+                    addBotMessage('안녕하세요! 저는 피부진단을 도와드리는 SBOT입니다. 피부 관련 질문이 있으시면 언제든지 말씀해주세요. 어떤 피부 고민이 있으신가요?');
+                } else if (currentCustomerId === 'customer002') {
+                    addBotMessage('안녕하세요! 저는 영양 상담을 도와드리는 영양사입니다. 건강한 식습관과 영양 관리에 대해 질문이 있으시면 언제든지 말씀해주세요. 어떤 영양 관련 고민이 있으신가요?');
+                } else {
+                    addBotMessage('대화 기록이 초기화되었습니다. 새로운 대화를 시작해보세요!');
+                }
+                
+                console.log('대화 기록 초기화 완료');
+            } catch (error) {
+                console.error('대화 기록 초기화 오류:', error);
+                addBotMessage('대화 기록 초기화 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        }
+        
+        // 채팅창 맨 아래로 스크롤하는 함수
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 이벤트 리스너 등록
+        sendButton.addEventListener('click', handleSendMessage);
+        
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+        
+        // 설정 아이콘 클릭 시 세션 메뉴 표시
+        document.querySelector('.settings-icon').addEventListener('click', function(e) {
+            e.stopPropagation();
+            showSessionMenu();
+        });
+        
+        // 페이지 로드 시 초기 고객 ID 설정 및 채팅 기록 불러오기
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 쿠키에서 고객 ID 가져오기 (기본값은 customer001)
+            currentCustomerId = getCookie('customer_id') || 'customer001';
+            console.log('초기 고객 ID:', currentCustomerId);
+            
+            // 쿠키에 고객 ID 저장 (1일 유효)
+            document.cookie = `customer_id=${currentCustomerId}; path=/; max-age=86400`;
+            
+            // 채팅 기록 불러오기
+            await fetchChatHistory();
+            
+            // 입력 필드에 포커스
+            userInput.focus();
+        });
+    </script>
+</body>
+</html>
