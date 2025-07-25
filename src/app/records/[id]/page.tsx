@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Calendar, AlertTriangle, CheckCircle, Info, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, AlertTriangle, CheckCircle, Info, Share2, Trash2, X } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
 import Button from '@/components/Button';
 import Modal from '@/components/Modal';
@@ -105,11 +105,11 @@ const RecordDetailPage = () => {
             <ArrowLeft size={24} />
           </button>
           <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--text-primary)' }}>진료기록 상세</h1>
-          <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-xs)', position: 'relative', zIndex: 20 }}>
             <button onClick={handleShare} style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--bg-secondary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'var(--transition)' }}>
               <Share2 size={20} />
             </button>
-            <button onClick={() => setShowDeleteModal(true)} style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--bg-secondary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', cursor: 'pointer', transition: 'var(--transition)' }}>
+            <button onClick={() => { console.log('delete click'); setShowDeleteModal(true); }} style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--bg-secondary)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', cursor: 'pointer', transition: 'var(--transition)', zIndex: 21 }}>
               <Trash2 size={20} />
             </button>
           </div>
@@ -147,10 +147,24 @@ const RecordDetailPage = () => {
             <div className="card-content"><p style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{diagnosis.detailedInfo}</p></div>
           </div>
 
-          {/* 권장사항 */}
+          {/* 질병 증상 */}
+          {diagnosis.symptoms && diagnosis.symptoms.length > 0 && (
+            <div className="card animate-fade-in" style={{ animationDelay: '0.25s' }}>
+              <div className="card-header" style={{ background: 'var(--primary-bg)' }}><h3 className="card-title">질병 증상</h3></div>
+              <div className="card-content">
+                <ul style={{ display:'flex', flexDirection:'column', gap:'var(--space-sm)' }}>
+                  {diagnosis.symptoms.map((sym, idx) => (
+                    <li key={idx} style={{ fontSize:'var(--text-base)', color:'var(--text-secondary)', lineHeight:1.5 }}>{sym}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* 권장사항 (최대 3개) */}
           <div className="card animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="card-header" style={{ background: 'var(--primary-bg)' }}><h3 className="card-title">권장사항</h3></div>
-            <div className="card-content"><div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>{diagnosis.recommendations.map((rec, idx) => (<div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-sm)' }}><div style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', marginTop: '8px', flexShrink: 0 }}></div><p style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{rec}</p></div>))}</div></div>
+            <div className="card-content"><div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>{diagnosis.recommendations.slice(0,3).map((rec, idx) => (<div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-sm)' }}><div style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', marginTop: '8px', flexShrink: 0 }}></div><p style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{rec}</p></div>))}</div></div>
           </div>
 
           {/* 진단 날짜 */}
@@ -183,18 +197,43 @@ const RecordDetailPage = () => {
       {/* 바텀 네비게이션 */}
       <BottomNavigation />
       {/* 삭제 확인 모달 */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="진료기록 삭제" size="sm">
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-          <div style={{ width: '64px', height: '64px', margin: '0 auto', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Trash2 size={24} color="#ef4444" />
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} showCloseButton={false}>
+        <div style={{ borderRadius: 'var(--radius)', background: 'var(--bg-primary)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
+          {/* 헤더 */}
+          <div style={{ position: 'relative', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', padding: 'var(--space-md)', textAlign: 'center' }}>
+            <h3 style={{ color: 'var(--text-inverse)', fontSize: 'var(--text-lg)', fontWeight: 600 }}>진료기록 삭제</h3>
+            <button onClick={() => setShowDeleteModal(false)} style={{ position: 'absolute', top: 'var(--space-sm)', right: 'var(--space-sm)', background: 'transparent', border: 'none', color: 'var(--text-inverse)', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
           </div>
-          <div>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-sm)' }}><strong>{diagnosis.diseaseName}</strong> 진료기록을 삭제하시겠습니까?</p>
-            <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>삭제된 기록은 복구할 수 없습니다.</p>
+          {/* 바디 */}
+          <div style={{ padding: 'var(--space-lg)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+            <div style={{ width: '64px', height: '64px', margin: '0 auto', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Trash2 size={28} color="#ef4444" />
+            </div>
+            <div>
+              <p style={{ color: 'var(--text-primary)', marginBottom: 'var(--space-sm)', fontWeight: 600 }}>{diagnosis.diseaseName}</p>
+              <p style={{ color: 'var(--text-primary)', lineHeight: 1.5 }}>진료기록을 삭제하시겠습니까?</p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
-            <Button variant="outline" size="md" style={{ flex: 1 }} onClick={() => setShowDeleteModal(false)}>취소</Button>
-            <Button variant="danger" size="md" style={{ flex: 1 }} onClick={handleDelete}>삭제</Button>
+          {/* 확인 버튼 */}
+          <div style={{ padding: 'var(--space-md)' }}>
+            <button
+              onClick={handleDelete}
+              style={{
+                width: '100%',
+                minHeight: '48px',
+                border: 'none',
+                borderRadius: 'var(--radius)',
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
+                color: 'var(--text-inverse)',
+                fontSize: 'var(--text-base)',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              확인
+            </button>
           </div>
         </div>
       </Modal>

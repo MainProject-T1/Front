@@ -49,7 +49,7 @@ const DashboardPage = () => {
         
         {/* 헤더 */}
         <div style={{
-          background: 'linear-gradient(135deg, var(--header-start) 0%, var(--header-mid1) 20%, var(--header-mid2) 50%, var(--primary) 100%)',
+          background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
           borderRadius: 'var(--radius)',
           padding: 'var(--space-lg)',
           color: 'var(--text-primary)',
@@ -58,14 +58,22 @@ const DashboardPage = () => {
         }}>
           {/* 로고와 설정 버튼 */}
           <div className="flex items-center justify-between mb-lg">
-            <div style={{
-              width: '50px',
-              height: '50px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <ScannerLogo size={40} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: 'var(--radius)',
+                background: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <ScannerLogo size={40} />
+              </div>
+              <span style={{ fontSize: 'var(--text-xl)', fontWeight: 300, color: 'var(--text-inverse)' }}>
+                Skancer!
+              </span>
             </div>
             <button
               onClick={handleSettings}
@@ -103,10 +111,10 @@ const DashboardPage = () => {
               <User size={28} color="var(--primary)" />
             </div>
             <div>
-              <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: '700', marginBottom: '4px' }}>
+              <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: '700', marginBottom: '4px', color: 'var(--text-inverse)' }}>
                 안녕하세요, 홍길동님!
               </h1>
-              <p style={{ fontSize: 'var(--text-base)', opacity: 0.9 }}>
+              <p style={{ fontSize: 'var(--text-base)', opacity: 0.9, color: 'var(--text-inverse)' }}>
                 {currentTime.toLocaleDateString('ko-KR', { 
                   month: 'long', 
                   day: 'numeric',

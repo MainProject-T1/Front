@@ -9,7 +9,8 @@
   --primary: #3b82f6;
   --primary-dark: #2563eb;
   --primary-light: #60a5fa;
-  --primary-bg: #eff6ff;
+  /* light mode 조금 더 진한 파랑 */
+  --primary-bg: #dbeafe;
   
   --text-primary: #111827;
   --text-secondary: #6b7280;
@@ -76,6 +77,13 @@
   --text-secondary: #d1d5db;
   --text-tertiary: #9ca3af;
   --border: #374151;
+
+  /* 롤백: 라이트 동일 */
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-light: #60a5fa;
+  /* 헤더 박스용 진한 파랑 그라데이션 */
+  --primary-bg: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 
   /* 헤더 그라데이션 – 진한 파랑 계열 */
   --header-start: #1e3a8a; /* deep blue */
@@ -826,6 +834,8 @@ body {
     --text-secondary: #d1d5db;
     --text-tertiary: #9ca3af;
     --border: #374151;
-}
+    /* 헤더 박스용 진한 파랑 그라데이션 */
+    --primary-bg: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  }
 }
 

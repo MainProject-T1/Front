@@ -13,6 +13,11 @@ const mockDiagnosisResponses: MockDiagnosisResponse[] = [
       '자극적인 비누나 세제 사용을 피하세요',
       '면 소재의 옷을 착용하세요'
     ],
+    symptoms: [
+      '가려움',
+      '붉은 발진',
+      '건조한 피부'
+    ],
     riskLevel: 'medium',
     detailedInfo: '아토피 피부염은 전 세계적으로 흔한 만성 염증성 피부질환입니다. 주로 영유아기에 시작되어 소아기, 성인기까지 지속될 수 있습니다. 유전적 소인과 환경적 요인이 복합적으로 작용하여 발생합니다.'
   },
@@ -25,6 +30,11 @@ const mockDiagnosisResponses: MockDiagnosisResponse[] = [
       '적절한 세안을 유지하세요',
       '기름진 음식을 피하세요'
     ],
+    symptoms: [
+      '가려움',
+      '붉은 발진',
+      '건조한 피부'
+    ],
     riskLevel: 'low',
     detailedInfo: '지루성 피부염은 말라세지아 효모균과 관련이 있으며, 스트레스, 면역력 저하, 호르몬 변화 등이 악화 요인이 될 수 있습니다.'
   },
@@ -36,6 +46,11 @@ const mockDiagnosisResponses: MockDiagnosisResponse[] = [
       '스트레스 관리가 중요합니다',
       '금연과 금주를 권장합니다',
       '적절한 체중을 유지하세요'
+    ],
+    symptoms: [
+      '가려움',
+      '붉은 발진',
+      '건조한 피부'
     ],
     riskLevel: 'high',
     detailedInfo: '건선은 T세포 매개 자가면역질환으로, 유전적 소인과 환경적 요인이 함께 작용합니다. 조기 진단과 적절한 치료가 매우 중요합니다.'

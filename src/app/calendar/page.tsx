@@ -85,7 +85,7 @@ const CalendarPage = () => {
           d.getFullYear() === currentYear &&
           d.getMonth() === currentMonth &&
           d.getDate() === day
-        );
+      );
       });
 
       const isToday = today.getDate() === day && today.getMonth() === currentMonth && today.getFullYear() === currentYear;

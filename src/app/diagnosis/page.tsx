@@ -22,7 +22,7 @@ const DiagnosisPage = () => {
     if (isMobile) {
       setPermissionPrompt(true);
     } else {
-      startCamera();
+    startCamera();
     }
     return () => {
       stopCamera();
@@ -360,10 +360,10 @@ const DiagnosisPage = () => {
               disabled={isAnalyzing}
               style={{
                 padding: 'var(--space-md) var(--space-xl)',
-                background: 'var(--primary)',
+                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
                 border: 'none',
                 borderRadius: 'var(--radius-xl)',
-                color: '#ffffff',
+                color: 'var(--text-inverse)',
                 fontSize: 'var(--text-lg)',
                 fontWeight: '600',
                 cursor: 'pointer',

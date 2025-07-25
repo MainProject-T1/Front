@@ -229,14 +229,32 @@ const DiagnosisResultPage = () => {
             </div>
           </div>
 
-          {/* 권장사항 */}
+          {/* 질병 증상 - 모델이 제공할 경우 노출 */}
+          {diagnosis.symptoms && diagnosis.symptoms.length > 0 && (
+            <div className="card animate-fade-in" style={{ animationDelay: '0.25s' }}>
+              <div className="card-header" style={{ background: 'var(--primary-bg)' }}>
+                <h3 className="card-title">질병 증상</h3>
+              </div>
+              <div className="card-content">
+                <ul style={{ display:'flex', flexDirection:'column', gap:'var(--space-sm)' }}>
+                  {diagnosis.symptoms.map((sym, idx) => (
+                    <li key={idx} style={{ fontSize:'var(--text-base)', color:'var(--text-secondary)', lineHeight:1.5 }}>
+                      {sym}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* 권장사항 (최대 3개) */}
           <div className="card animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="card-header" style={{ background: 'var(--primary-bg)' }}>
               <h3 className="card-title">권장사항</h3>
             </div>
             <div className="card-content">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                {diagnosis.recommendations.map((recommendation, index) => (
+                {diagnosis.recommendations.slice(0,3).map((recommendation, index) => (
                   <div key={index} style={{
                     display: 'flex',
                     alignItems: 'flex-start',

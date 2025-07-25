@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/utils';
 
@@ -56,45 +57,27 @@ const Modal: React.FC<ModalProps> = ({
     full: 'max-w-full mx-4',
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* 백드롭 */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
-      
-      {/* 모달 콘텐츠 */}
-      <div
-        className={cn(
-          'relative bg-white rounded-lg shadow-xl w-full',
-          sizeClasses[size]
-        )}
-      >
-        {/* 헤더 */}
+  const overlay = (
+    <div style={{ position:'fixed', inset:0, zIndex: 99999, display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)' }} onClick={onClose} />
+      <div className={cn('relative bg-white rounded-lg shadow-xl w-full', sizeClasses[size])}>
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            {title && (
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            )}
+            {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
             {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-              >
+              <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                 <X size={20} />
               </button>
             )}
           </div>
         )}
-        
-        {/* 바디 */}
-        <div className="p-4">
-          {children}
-        </div>
+        <div className="p-4">{children}</div>
       </div>
     </div>
   );
+
+  if (typeof window === 'undefined') return null;
+  return createPortal(overlay, document.body);
 };
 
 export default Modal; 

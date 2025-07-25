@@ -30,6 +30,7 @@ export interface DiagnosisResult {
   recommendations: string[];
   riskLevel: 'low' | 'medium' | 'high';
   detailedInfo: string;
+  symptoms?: string[];
   diagnosisDate: string;
 }
 
@@ -103,4 +104,5 @@ export interface MockDiagnosisResponse {
   recommendations: string[];
   riskLevel: 'low' | 'medium' | 'high';
   detailedInfo: string;
+  symptoms?: string[];
 } 

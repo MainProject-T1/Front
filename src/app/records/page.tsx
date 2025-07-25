@@ -11,7 +11,7 @@ import type { DiagnosisResult } from '@/types';
 
 const RecordsPage = () => {
   const router = useRouter();
-  const { results } = useDiagnosisStore();
+  const results = useDiagnosisStore(state => state.results);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRisk, setFilterRisk] = useState<'all' | 'low' | 'medium' | 'high'>('all');
   const [filteredResults, setFilteredResults] = useState<DiagnosisResult[]>([]);
